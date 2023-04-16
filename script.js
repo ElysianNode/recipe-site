@@ -2,6 +2,7 @@
 const searchInput = document.getElementById("search");
 const recipeList = document.getElementById("recipes");
 
+
 // Define a function to load recipes from a JSON file
 function loadRecipes(callback) {
   const xhr = new XMLHttpRequest();
@@ -20,29 +21,33 @@ function loadRecipes(callback) {
 function displayRecipes(recipes, searchQuery) {
   // Clear the recipe list element
   recipeList.innerHTML = "";
+  recipeList.appendChild(createOption("", "Select a recipe"));
 
   // Loop through the recipes and display any that match the search query
   for (let i = 0; i < recipes.length; i++) {
     const recipe = recipes[i];
     const title = recipe.Title.toLowerCase();
     if (title.includes(searchQuery.toLowerCase())) {
-      const li = document.createElement("li");
-      const link = document.createElement("a");
-      link.textContent = recipe.Title;
-      link.href = "#";
-      link.addEventListener("click", () => {
-        displayRecipe(recipe);
-      });
-      li.appendChild(link);
-      recipeList.appendChild(li);
+      const option = createOption(recipe.Id, recipe.Title);
+      recipeList.appendChild(option);
     }
   }
+}
 
-  console.log(`Displaying ${recipeList.childElementCount} recipes`);
+function createOption(value, text) {
+  const option = document.createElement("option");
+  option.value = value;
+  option.textContent = text;
+  return option;
 }
 
 // Define a function to display a single recipe
-function displayRecipe(recipe) {
+function displayRecipe(recipeId, recipes) {
+  const numericRecipeId = parseInt(recipeId, 10);
+  const recipe = recipes.find((recipe) => recipe.Id === numericRecipeId);
+  if (!recipe) {
+    return;
+  }
   const recipeDiv = document.getElementById("recipe");
   recipeDiv.innerHTML = `
     <h2>${recipe.Title}</h2>
@@ -53,9 +58,6 @@ function displayRecipe(recipe) {
       <div class="recipe-instructions">
         <div class="recipe-title">
           <h2>${recipe.Title}</h2>
-          <div class="rating">
-            ${generateStars(recipe.Rating)}
-          </div>
         </div>
         <div class="recipe-ingredients">
           <h3>Ingredients</h3>
@@ -74,26 +76,15 @@ function displayRecipe(recipe) {
   `;
 }
 
-
-// Define a function to generate star ratings
-function generateStars(rating) {
-  const fullStar = "&#9733;";
-  const emptyStar = "&#9734;";
-  const stars = [];
-  for (let i = 0; i < 5; i++) {
-    if (i < rating) {
-      stars.push(`<span class="star">${fullStar}</span>`);
-    } else {
-      stars.push(`<span class="star">${emptyStar}</span>`);
-    }
-  }
-  return stars.join("");
-}
-
 // Load the recipes and display them when the page is loaded
 window.addEventListener("load", () => {
   loadRecipes((recipes) => {
     displayRecipes(recipes, "");
+
+    // Add an event listener to the recipe list
+    recipeList.addEventListener("change", () => {
+      displayRecipe(recipeList.value, recipes);
+    });
   });
 });
 
@@ -103,3 +94,4 @@ searchInput.addEventListener("input", () => {
     displayRecipes(recipes, searchInput.value);
   });
 });
+
